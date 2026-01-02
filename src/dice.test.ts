@@ -68,6 +68,13 @@ describe('dice', () => {
         vi.clearAllMocks();
 
         init();
+
+        // Reset mocks after initial draw to isolate test actions
+        Object.values(MockGraphics).forEach(mockFn => {
+            if (vi.isMockFunction(mockFn)) {
+                mockFn.mockClear();
+            }
+        });
     });
 
     it('should initialize a new Phaser Game', async () => {
@@ -75,14 +82,24 @@ describe('dice', () => {
         expect(Phaser.Game).toHaveBeenCalledTimes(1);
     });
 
-    it('should call drawing functions when rollDice is executed', () => {
-        rollDice();
-        expect(MockGraphics.clear).toHaveBeenCalled();
-        expect(MockGraphics.fillStyle).toHaveBeenCalled();
-        expect(MockGraphics.fillRect).toHaveBeenCalled();
-        expect(MockGraphics.strokeRect).toHaveBeenCalled();
-        expect(MockGraphics.beginPath).toHaveBeenCalled();
-        expect(MockGraphics.arc).toHaveBeenCalled();
+    it('should call drawing functions when rollDice is executed for a single die', () => {
+        rollDice(1);
+        expect(lastScene.currentFaces.length).toBe(1);
+        expect(MockGraphics.clear).toHaveBeenCalledTimes(1);
+        expect(MockGraphics.fillRect).toHaveBeenCalledTimes(1);
+        expect(MockGraphics.strokeRect).toHaveBeenCalledTimes(1);
         expect(MockGraphics.fillPath).toHaveBeenCalled();
+    });
+
+    it('should call drawing functions for each die when rolling multiple dice', () => {
+        const numDice = 4;
+        rollDice(numDice);
+        expect(lastScene.currentFaces.length).toBe(numDice);
+        // Clear is only called once per redraw
+        expect(MockGraphics.clear).toHaveBeenCalledTimes(1);
+        expect(MockGraphics.fillRect).toHaveBeenCalledTimes(numDice);
+        expect(MockGraphics.strokeRect).toHaveBeenCalledTimes(numDice);
+        // Each die should have at least one pip
+        expect(MockGraphics.fillPath.mock.calls.length).toBeGreaterThanOrEqual(numDice);
     });
 });

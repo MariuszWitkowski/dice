@@ -4,7 +4,7 @@ let game: Phaser.Game | null = null;
 
 class DiceScene extends Phaser.Scene {
     graphics!: Phaser.GameObjects.Graphics;
-    currentFace: number = 1;
+    currentFaces: number[] = [1]; // Start with one die showing 1
 
     constructor() {
         super({ key: 'DiceScene' });
@@ -13,51 +13,74 @@ class DiceScene extends Phaser.Scene {
     create() {
         this.graphics = this.add.graphics();
         this.scale.on('resize', this.redraw, this);
-        this.registry.set('rollDice', () => this.roll());
+        this.registry.set('rollDice', (numDice: number) => this.roll(numDice));
         this.redraw(); // Initial draw
     }
 
-    roll() {
-        this.currentFace = Math.floor(Math.random() * 6) + 1;
+    roll(numDice: number) {
+        this.currentFaces = [];
+        for (let i = 0; i < numDice; i++) {
+            this.currentFaces.push(Math.floor(Math.random() * 6) + 1);
+        }
         this.redraw();
     }
 
     redraw() {
-        // Pass the current face to the drawing function
-        this.drawDice(this.currentFace);
+        this.graphics.clear();
+        const totalDice = this.currentFaces.length;
+        this.currentFaces.forEach((face, index) => {
+            this.drawDice(face, index, totalDice);
+        });
     }
 
-    drawDice(face: number) {
+    drawDice(face: number, index: number, totalDice: number) {
         const { width, height } = this.sys.canvas;
-        const minDim = Math.min(width, height);
 
-        // Dynamic sizing
-        const DICE_SIZE = minDim * 0.7; // 70% of the smallest dimension
-        const PADDING = (minDim - DICE_SIZE) / 2;
+        // Grid layout calculations
+        const cols = Math.ceil(Math.sqrt(totalDice));
+        const rows = Math.ceil(totalDice / cols);
+
+        const availableWidth = width * 0.9;
+        const availableHeight = height * 0.9;
+
+        const cellWidth = availableWidth / cols;
+        const cellHeight = availableHeight / rows;
+
+        const DICE_SIZE = Math.min(cellWidth, cellHeight) * 0.8;
         const PIP_RADIUS = DICE_SIZE / 12;
 
-        // Center the drawing area
-        const offsetX = (width - minDim) / 2;
-        const offsetY = (height - minDim) / 2;
+        const col = index % cols;
+        const row = Math.floor(index / cols);
 
-        this.graphics.clear();
+        const totalGridWidth = cols * cellWidth;
+        const totalGridHeight = rows * cellHeight;
+
+        const startX = (width - totalGridWidth) / 2;
+        const startY = (height - totalGridHeight) / 2;
+
+        const cellCenterX = startX + col * cellWidth + cellWidth / 2;
+        const cellCenterY = startY + row * cellHeight + cellHeight / 2;
+
+        const diceX = cellCenterX - DICE_SIZE / 2;
+        const diceY = cellCenterY - DICE_SIZE / 2;
+
 
         // Draw dice body
         this.graphics.fillStyle(0xffffff, 1);
         this.graphics.lineStyle(2, 0x000000, 1);
-        this.graphics.fillRect(offsetX + PADDING, offsetY + PADDING, DICE_SIZE, DICE_SIZE);
-        this.graphics.strokeRect(offsetX + PADDING, offsetY + PADDING, DICE_SIZE, DICE_SIZE);
+        this.graphics.fillRect(diceX, diceY, DICE_SIZE, DICE_SIZE);
+        this.graphics.strokeRect(diceX, diceY, DICE_SIZE, DICE_SIZE);
 
         this.graphics.fillStyle(0x000000, 1);
 
         const pipPositions = {
-            center: { x: offsetX + PADDING + DICE_SIZE / 2, y: offsetY + PADDING + DICE_SIZE / 2 },
-            topLeft: { x: offsetX + PADDING + DICE_SIZE / 4, y: offsetY + PADDING + DICE_SIZE / 4 },
-            topRight: { x: offsetX + PADDING + (DICE_SIZE * 3) / 4, y: offsetY + PADDING + DICE_SIZE / 4 },
-            bottomLeft: { x: offsetX + PADDING + DICE_SIZE / 4, y: offsetY + PADDING + (DICE_SIZE * 3) / 4 },
-            bottomRight: { x: offsetX + PADDING + (DICE_SIZE * 3) / 4, y: offsetY + PADDING + (DICE_SIZE * 3) / 4 },
-            middleLeft: { x: offsetX + PADDING + DICE_SIZE / 4, y: offsetY + PADDING + DICE_SIZE / 2 },
-            middleRight: { x: offsetX + PADDING + (DICE_SIZE * 3) / 4, y: offsetY + PADDING + DICE_SIZE / 2 },
+            center: { x: diceX + DICE_SIZE / 2, y: diceY + DICE_SIZE / 2 },
+            topLeft: { x: diceX + DICE_SIZE / 4, y: diceY + DICE_SIZE / 4 },
+            topRight: { x: diceX + (DICE_SIZE * 3) / 4, y: diceY + DICE_SIZE / 4 },
+            bottomLeft: { x: diceX + DICE_SIZE / 4, y: diceY + (DICE_SIZE * 3) / 4 },
+            bottomRight: { x: diceX + (DICE_SIZE * 3) / 4, y: diceY + (DICE_SIZE * 3) / 4 },
+            middleLeft: { x: diceX + DICE_SIZE / 4, y: diceY + DICE_SIZE / 2 },
+            middleRight: { x: diceX + (DICE_SIZE * 3) / 4, y: diceY + DICE_SIZE / 2 },
         };
 
         const drawPip = (pos: { x: number; y: number }) => {
@@ -124,11 +147,11 @@ export function init() {
     game = new Phaser.Game(config);
 }
 
-export function rollDice() {
+export function rollDice(numDice: number) {
     if (game) {
         const scene = game.scene.getScene('DiceScene');
         if (scene && scene.registry.has('rollDice')) {
-            scene.registry.get('rollDice')();
+            scene.registry.get('rollDice')(numDice);
         }
     }
 }
