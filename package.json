@@ -5,6 +5,7 @@
   "private": true,
   "devDependencies": {
     "@types/bun": "latest",
+    "canvas": "^2.11.2",
     "oxc": "^1.0.1",
     "typescript": "^5.9.3",
     "vite": "^5.0.0",
@@ -18,9 +19,7 @@
     "format": "oxc format . --fix"
   },
   "dependencies": {
-    "@types/three": "^0.182.0",
-    "gsap": "^3.14.2",
     "jsdom": "^27.4.0",
-    "three": "^0.182.0"
+    "phaser": "^3.80.1"
   }
 }
