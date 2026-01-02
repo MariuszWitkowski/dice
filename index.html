@@ -4,9 +4,25 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Vite + Bun</title>
+    <style>
+        body { margin: 0; }
+        canvas { display: block; }
+        #roll-button {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 10px 20px;
+            font-size: 1.2em;
+            cursor: pointer;
+            z-index: 10;
+        }
+    </style>
   </head>
   <body>
     <div id="app"></div>
+    <canvas id="bg"></canvas>
+    <button id="roll-button">roll</button>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
