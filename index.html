@@ -17,10 +17,20 @@
             cursor: pointer;
             z-index: 10;
         }
+        #version {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            color: white;
+            font-family: sans-serif;
+            font-size: 1em;
+            z-index: 10;
+        }
     </style>
   </head>
   <body>
     <div id="app"></div>
+    <div id="version"></div>
     <canvas id="bg"></canvas>
     <button id="roll-button">roll</button>
     <script type="module" src="/src/main.ts"></script>
