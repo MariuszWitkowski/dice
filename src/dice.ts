@@ -1,76 +1,106 @@
-import * as THREE from 'three';
-import { gsap } from 'gsap';
+import Phaser from 'phaser';
 
-let scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, cube: THREE.Mesh;
+let game: Phaser.Game | null = null;
+export let graphics: Phaser.GameObjects.Graphics; // Export for testing
+const DICE_SIZE = 100;
+const PIP_RADIUS = 8;
+const PADDING = 20;
 
-function handleResize() {
-    // Update camera
-    camera.aspect = window.innerWidth / window.innerHeight;
-    camera.updateProjectionMatrix();
-
-    // Update renderer
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    renderer.setPixelRatio(window.devicePixelRatio);
-}
-
-export function init() {
-    // Scene
-    scene = new THREE.Scene();
-
-    // Camera
-    camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-    camera.position.z = 5;
-
-    // Renderer
-    const canvas = document.querySelector('#bg') as HTMLCanvasElement;
-    renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    handleResize();
-
-    // Cube
-    const geometry = new THREE.BoxGeometry();
-    const materials = [
-        new THREE.MeshBasicMaterial({ color: 0xff0000 }), // right
-        new THREE.MeshBasicMaterial({ color: 0x00ff00 }), // left
-        new THREE.MeshBasicMaterial({ color: 0x0000ff }), // top
-        new THREE.MeshBasicMaterial({ color: 0xffff00 }), // bottom
-        new THREE.MeshBasicMaterial({ color: 0x00ffff }), // front
-        new THREE.MeshBasicMaterial({ color: 0xff00ff })  // back
-    ];
-    cube = new THREE.Mesh(geometry, materials);
-    scene.add(cube);
-
-    window.addEventListener('resize', handleResize);
-
-    // Animation Loop
-    function animate() {
-        requestAnimationFrame(animate);
-        renderer.render(scene, camera);
+class DiceScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'DiceScene' });
     }
 
-    animate();
+    create() {
+        graphics = this.add.graphics();
+        drawDice(1); // Start with face 1
+    }
+}
+
+const config: Phaser.Types.Core.GameConfig = {
+    type: Phaser.AUTO,
+    width: DICE_SIZE + PADDING * 2,
+    height: DICE_SIZE + PADDING * 2,
+    parent: 'game-container',
+    scene: [DiceScene],
+    backgroundColor: '#ffffff',
+};
+
+export function init() {
+    if (game) {
+        game.destroy(true);
+    }
+    game = new Phaser.Game(config);
 }
 
 export function rollDice() {
-    const rotations = [
-        { x: 0, y: 0 }, // Face 1 (front)
-        { x: 0, y: Math.PI }, // Face 2 (back)
-        { x: -Math.PI / 2, y: 0 }, // Face 3 (top)
-        { x: Math.PI / 2, y: 0 }, // Face 4 (bottom)
-        { x: 0, y: -Math.PI / 2 }, // Face 5 (right)
-        { x: 0, y: Math.PI / 2 } // Face 6 (left)
-    ];
+    const randomFace = Math.floor(Math.random() * 6) + 1;
+    drawDice(randomFace);
+}
 
-    const randomFace = rotations[Math.floor(Math.random() * rotations.length)];
+function drawDice(face: number) {
+    if (!graphics) return;
 
-    // Add some extra spin for the rolling effect
-    const finalRotationX = randomFace.x + 2 * Math.PI * (Math.floor(Math.random() * 2) + 1);
-    const finalRotationY = randomFace.y + 2 * Math.PI * (Math.floor(Math.random() * 2) + 1);
+    graphics.clear();
+
+    // Draw dice body
+    graphics.fillStyle(0xffffff, 1);
+    graphics.lineStyle(2, 0x000000, 1);
+    graphics.fillRect(PADDING, PADDING, DICE_SIZE, DICE_SIZE);
+    graphics.strokeRect(PADDING, PADDING, DICE_SIZE, DICE_SIZE);
 
 
-    gsap.to(cube.rotation, {
-        x: finalRotationX,
-        y: finalRotationY,
-        duration: 2,
-        ease: 'power2.out',
-    });
+    graphics.fillStyle(0x000000, 1);
+
+    const pipPositions = {
+        center: { x: PADDING + DICE_SIZE / 2, y: PADDING + DICE_SIZE / 2 },
+        topLeft: { x: PADDING + DICE_SIZE / 4, y: PADDING + DICE_SIZE / 4 },
+        topRight: { x: PADDING + (DICE_SIZE * 3) / 4, y: PADDING + DICE_SIZE / 4 },
+        bottomLeft: { x: PADDING + DICE_SIZE / 4, y: PADDING + (DICE_SIZE * 3) / 4 },
+        bottomRight: { x: PADDING + (DICE_SIZE * 3) / 4, y: PADDING + (DICE_SIZE * 3) / 4 },
+        middleLeft: { x: PADDING + DICE_SIZE / 4, y: PADDING + DICE_SIZE / 2 },
+        middleRight: { x: PADDING + (DICE_SIZE * 3) / 4, y: PADDING + DICE_SIZE / 2 },
+    };
+
+    const drawPip = (pos: { x: number; y: number }) => {
+        graphics.beginPath();
+        graphics.arc(pos.x, pos.y, PIP_RADIUS, 0, Math.PI * 2);
+        graphics.fillPath();
+    };
+
+    switch (face) {
+        case 1:
+            drawPip(pipPositions.center);
+            break;
+        case 2:
+            drawPip(pipPositions.topLeft);
+            drawPip(pipPositions.bottomRight);
+            break;
+        case 3:
+            drawPip(pipPositions.topLeft);
+            drawPip(pipPositions.center);
+            drawPip(pipPositions.bottomRight);
+            break;
+        case 4:
+            drawPip(pipPositions.topLeft);
+            drawPip(pipPositions.topRight);
+            drawPip(pipPositions.bottomLeft);
+            drawPip(pipPositions.bottomRight);
+            break;
+        case 5:
+            drawPip(pipPositions.topLeft);
+            drawPip(pipPositions.topRight);
+            drawPip(pipPositions.center);
+            drawPip(pipPositions.bottomLeft);
+            drawPip(pipPositions.bottomRight);
+            break;
+        case 6:
+            drawPip(pipPositions.topLeft);
+            drawPip(pipPositions.topRight);
+            drawPip(pipPositions.middleLeft);
+            drawPip(pipPositions.middleRight);
+            drawPip(pipPositions.bottomLeft);
+            drawPip(pipPositions.bottomRight);
+            break;
+    }
 }
