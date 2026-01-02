@@ -17,11 +17,24 @@
             cursor: pointer;
             z-index: 10;
         }
+        #version {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            color: white;
+            font-family: sans-serif;
+            font-size: 1em;
+            z-index: 10;
+            background-color: rgba(128, 128, 128, 0.5);
+            padding: 5px;
+            border-radius: 5px;
+        }
     </style>
     <script type="module" crossorigin src="/assets/index-gqfVgNh2.js"></script>
   </head>
   <body>
     <div id="app"></div>
+    <div id="version">v0.1.0</div>
     <canvas id="bg"></canvas>
     <button id="roll-button">roll</button>
   </body>
