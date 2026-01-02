@@ -29,3 +29,7 @@ This project uses GitHub Actions for CI/CD.
 
 -   **CI:** On every pull request to `main`, the CI workflow will run the linter and tests.
 -   **CD:** On every push to `main`, the CD workflow will build the project and deploy it to GitHub Pages.
+
+## Versioning
+
+This project uses semantic versioning. On every pull request, the version number in `package.json` and `index.html` should be updated according to the changes made.
