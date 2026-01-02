@@ -1,6 +1,8 @@
 
 import { init, rollDice } from './dice';
 
-init();
+document.addEventListener('DOMContentLoaded', () => {
+  init();
+});
 
 document.getElementById('roll-button')!.addEventListener('click', rollDice);
