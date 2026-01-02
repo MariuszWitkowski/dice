@@ -37,14 +37,24 @@
             max-height: 100%;
             object-fit: contain;
         }
+        #controls-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 10px;
+            background-color: #f0f0f0;
+        }
+        #dice-selector {
+            font-size: 1.2em;
+            margin: 0 10px;
+        }
         #roll-button {
-            width: 100%;
-            padding: 20px;
+            padding: 15px 30px;
             font-size: 1.5em;
             cursor: pointer;
             z-index: 10;
             border: none;
-            background-color: #f0f0f0;
+            background-color: #e0e0e0;
         }
         #version {
             position: fixed;
@@ -59,13 +69,24 @@
             border-radius: 5px;
         }
     </style>
-    <script type="module" crossorigin src="/dice/assets/index-BK8yUFF4.js"></script>
+    <script type="module" crossorigin src="/dice/assets/index-Ah2koFXe.js"></script>
   </head>
   <body>
     <div id="content-container">
         <div id="game-container"></div>
     </div>
-    <button id="roll-button">roll</button>
-    <div id="version">v0.3.1</div>
+    <div id="controls-container">
+        <label for="dice-selector">Number of dice:</label>
+        <select id="dice-selector">
+            <option value="1" selected>1</option>
+            <option value="2">2</option>
+            <option value="3">3</option>
+            <option value="4">4</option>
+            <option value="5">5</option>
+            <option value="6">6</option>
+        </select>
+        <button id="roll-button">Roll</button>
+    </div>
+    <div id="version">v0.4.0</div>
   </body>
 </html>
