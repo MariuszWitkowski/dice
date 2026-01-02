@@ -1,0 +1,19 @@
+{
+  "name": "dice-project",
+  "type": "module",
+  "private": true,
+  "devDependencies": {
+    "@types/bun": "latest",
+    "oxc": "^1.0.1",
+    "vite": "^5.0.0",
+    "vitest": "^1.0.0",
+    "typescript": "^5.9.3"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "test": "vitest",
+    "lint": "oxc lint .",
+    "format": "oxc format . --fix"
+  }
+}
