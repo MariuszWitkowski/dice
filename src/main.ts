@@ -1,3 +1,5 @@
-document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
-  <h1>Hello, World!</h1>
-`
+import { init, rollDice } from './dice';
+
+init();
+
+document.getElementById('roll-button')!.addEventListener('click', rollDice);
