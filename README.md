@@ -32,4 +32,4 @@ This project uses GitHub Actions for CI/CD.
 
 ## Versioning
 
-This project uses semantic versioning. On every pull request, the version number in `package.json` should be updated according to the changes made.
+This project uses semantic versioning. On every pull request, the version number in `package.json` and `index.html` should be updated according to the changes made.
