@@ -3,6 +3,16 @@ import { gsap } from 'gsap';
 
 let scene: THREE.Scene, camera: THREE.PerspectiveCamera, renderer: THREE.WebGLRenderer, cube: THREE.Mesh;
 
+function handleResize() {
+    // Update camera
+    camera.aspect = window.innerWidth / window.innerHeight;
+    camera.updateProjectionMatrix();
+
+    // Update renderer
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+}
+
 export function init() {
     // Scene
     scene = new THREE.Scene();
@@ -14,7 +24,7 @@ export function init() {
     // Renderer
     const canvas = document.querySelector('#bg') as HTMLCanvasElement;
     renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    handleResize();
 
     // Cube
     const geometry = new THREE.BoxGeometry();
@@ -28,6 +38,8 @@ export function init() {
     ];
     cube = new THREE.Mesh(geometry, materials);
     scene.add(cube);
+
+    window.addEventListener('resize', handleResize);
 
     // Animation Loop
     function animate() {
