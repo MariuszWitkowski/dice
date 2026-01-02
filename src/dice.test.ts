@@ -13,25 +13,47 @@ const MockGraphics = {
     fillPath: vi.fn(),
 };
 
+// Mock registry to handle scene-level events/data
+const registryMock = {
+    _data: new Map(),
+    set: vi.fn((key, value) => registryMock._data.set(key, value)),
+    get: vi.fn((key) => registryMock._data.get(key)),
+    has: vi.fn((key) => registryMock._data.has(key)),
+    clear: () => {
+        registryMock._data.clear();
+        registryMock.set.mockClear();
+        registryMock.get.mockClear();
+        registryMock.has.mockClear();
+    }
+};
+
 let lastScene: any;
 
 vi.mock('phaser', () => ({
   default: {
     Game: vi.fn().mockImplementation((config) => {
       lastScene = new config.scene[0]();
-      lastScene.add = {
-        graphics: () => MockGraphics,
-      };
+      lastScene.add = { graphics: () => MockGraphics };
+      lastScene.scale = { on: vi.fn() };
+      lastScene.registry = registryMock;
+      lastScene.sys = { canvas: { width: 400, height: 400 } };
+
       // Manually call create to simulate Phaser's lifecycle
       lastScene.create();
+
       return {
         destroy: vi.fn(),
+        scene: {
+          getScene: vi.fn().mockReturnValue(lastScene),
+        },
       };
     }),
-    Scene: vi.fn(function(this: any) {
-      // Don't need to do anything here, since we're creating the scene manually
-    }),
+    Scene: vi.fn(),
     AUTO: 1,
+    Scale: {
+      FIT: 'FIT',
+      CENTER_BOTH: 'CENTER_BOTH',
+    },
   }
 }));
 
@@ -42,6 +64,7 @@ describe('dice', () => {
         global.document = dom.window.document;
         global.window = dom.window as unknown as Window & typeof globalThis;
 
+        registryMock.clear();
         vi.clearAllMocks();
 
         init();
