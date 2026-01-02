@@ -7,17 +7,44 @@
     <script src="//cdn.jsdelivr.net/npm/eruda"></script>
     <script>eruda.init();</script>
     <style>
-        body { margin: 0; }
-        canvas { display: block; }
+        html, body {
+            height: 100%;
+            margin: 0;
+            overflow: hidden;
+        }
+        body {
+            display: flex;
+            flex-direction: column;
+            background-color: #ffffff; /* Same as canvas background */
+        }
+        #content-container {
+            flex-grow: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden; /* Prevent canvas overflow from breaking layout */
+        }
+        #game-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+            height: 100%;
+        }
+        canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
         #roll-button {
-            position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 10px 20px;
-            font-size: 1.2em;
+            width: 100%;
+            padding: 20px;
+            font-size: 1.5em;
             cursor: pointer;
             z-index: 10;
+            border: none;
+            background-color: #f0f0f0;
         }
         #version {
             position: fixed;
@@ -32,12 +59,13 @@
             border-radius: 5px;
         }
     </style>
-    <script type="module" crossorigin src="/dice/assets/index-d5KMazlY.js"></script>
+    <script type="module" crossorigin src="/dice/assets/index-BK8yUFF4.js"></script>
   </head>
   <body>
-    <div id="app"></div>
-    <div id="version">v0.3.1</div>
-    <div id="game-container"></div>
+    <div id="content-container">
+        <div id="game-container"></div>
+    </div>
     <button id="roll-button">roll</button>
+    <div id="version">v0.3.1</div>
   </body>
 </html>
