@@ -4,10 +4,11 @@
   "private": true,
   "devDependencies": {
     "@types/bun": "latest",
+    "eruda": "^3.4.3",
     "oxc": "^1.0.1",
+    "typescript": "^5.9.3",
     "vite": "^5.0.0",
-    "vitest": "^1.0.0",
-    "typescript": "^5.9.3"
+    "vitest": "^1.0.0"
   },
   "scripts": {
     "dev": "vite",
