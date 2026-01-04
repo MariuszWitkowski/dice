@@ -1,9 +1,10 @@
 import Phaser from 'phaser';
+import { Dice3D } from './dice-3d';
 
 let game: Phaser.Game | null = null;
 
 class DiceScene extends Phaser.Scene {
-    dice: Phaser.GameObjects.Container[] = [];
+    dice: Dice3D[] = [];
     currentFaces: number[] = [1]; // Start with one die showing 1
 
     constructor() {
@@ -17,7 +18,6 @@ class DiceScene extends Phaser.Scene {
     }
 
     roll(numDice: number) {
-        const { width, height } = this.sys.canvas;
         this.currentFaces = [];
         for (let i = 0; i < numDice; i++) {
             this.currentFaces.push(Math.floor(Math.random() * 6) + 1);
@@ -27,36 +27,20 @@ class DiceScene extends Phaser.Scene {
         const diceNeeded = numDice - this.dice.length;
         if (diceNeeded > 0) {
             for (let i = 0; i < diceNeeded; i++) {
-                this.dice.push(this.createDice());
+                const newDie = this.createDice(this.dice.length);
+                this.dice.push(newDie);
             }
         } else if (diceNeeded < 0) {
             this.dice.splice(numDice).forEach(die => die.destroy());
         }
 
+        // reposition remaining dice
         this.dice.forEach((die, index) => {
-            // Set random starting position and rotation
-            die.setPosition(Phaser.Math.Between(-width / 2, width * 1.5), Phaser.Math.Between(-height / 2, height * 1.5));
-            die.setAngle(Phaser.Math.Between(0, 360));
+            this.layoutDice(die, index, this.dice.length);
+        });
 
-            // Force a redraw of the old face before animation
-            const oldFace = die.getData('face') || 1;
-            this.drawDiceFace(die, oldFace);
-
-            // Get final position
-            const targetPos = this.getLayoutPosition(index, numDice);
-
-            this.tweens.add({
-                targets: die,
-                x: targetPos.x,
-                y: targetPos.y,
-                angle: 1080 + Phaser.Math.Between(-180, 180), // Spin multiple times
-                duration: 1000,
-                ease: 'Cubic.easeOut',
-                onComplete: () => {
-                    die.setAngle(0); // Reset angle
-                    this.drawDiceFace(die, this.currentFaces[index]);
-                }
-            });
+        this.dice.forEach((die, index) => {
+            die.roll(this.currentFaces[index]);
         });
     }
 
@@ -76,10 +60,9 @@ class DiceScene extends Phaser.Scene {
         this.dice = [];
 
         this.currentFaces.forEach((face, index) => {
-            const die = this.createDice();
+            const die = this.createDice(index);
             this.dice.push(die);
-            this.drawDiceFace(die, face);
-            this.layoutDice(die, index, totalDice);
+            die.draw(face);
         });
     }
 
@@ -89,8 +72,8 @@ class DiceScene extends Phaser.Scene {
         const cols = Math.ceil(Math.sqrt(totalDice));
         const rows = Math.ceil(totalDice / cols);
 
-        const availableWidth = width * 0.9;
-        const availableHeight = height * 0.9;
+        const availableWidth = width * 0.8;
+        const availableHeight = height * 0.8;
 
         const cellWidth = availableWidth / cols;
         const cellHeight = availableHeight / rows;
@@ -98,105 +81,34 @@ class DiceScene extends Phaser.Scene {
         const col = index % cols;
         const row = Math.floor(index / cols);
 
-        const totalGridWidth = cols * cellWidth;
-        const totalGridHeight = rows * cellHeight;
+        const startX = (width - availableWidth) / 2;
+        const startY = (height - availableHeight) / 2;
 
-        const startX = (width - totalGridWidth) / 2;
-        const startY = (height - totalGridHeight) / 2;
+        const x = startX + col * cellWidth + cellWidth / 2;
+        const y = startY + row * cellHeight + cellHeight / 2;
 
-        const cellCenterX = startX + col * cellWidth + cellWidth / 2;
-        const cellCenterY = startY + row * cellHeight + cellHeight / 2;
-
-        return { x: cellCenterX, y: cellCenterY };
+        return { x, y };
     }
 
-    layoutDice(die: Phaser.GameObjects.Container, index: number, totalDice: number) {
+
+    layoutDice(die: Dice3D, index: number, totalDice: number) {
         const pos = this.getLayoutPosition(index, totalDice);
         die.setPosition(pos.x, pos.y);
     }
 
-    createDice(): Phaser.GameObjects.Container {
-        const container = this.add.container(0, 0);
-        const graphics = this.add.graphics();
-        container.add(graphics);
-        return container;
-    }
-
-    drawDiceFace(die: Phaser.GameObjects.Container, face: number) {
-        const graphics = die.getAt(0) as Phaser.GameObjects.Graphics;
+    createDice(index: number): Dice3D {
         const { width, height } = this.sys.canvas;
         const totalDice = this.currentFaces.length > 0 ? this.currentFaces.length : 1;
         const cols = Math.ceil(Math.sqrt(totalDice));
         const rows = Math.ceil(totalDice / cols);
-        const availableWidth = width * 0.9;
-        const availableHeight = height * 0.9;
+        const availableWidth = width * 0.8;
+        const availableHeight = height * 0.8;
         const cellWidth = availableWidth / cols;
         const cellHeight = availableHeight / rows;
-        const DICE_SIZE = Math.min(cellWidth, cellHeight) * 0.8;
-        const PIP_RADIUS = DICE_SIZE / 12;
+        const DICE_SIZE = Math.min(cellWidth, cellHeight) * 0.5;
 
-        graphics.clear();
-        die.setData('face', face);
-
-        // Draw dice body
-        graphics.fillStyle(0xffffff, 1);
-        graphics.lineStyle(2, 0x000000, 1);
-        graphics.fillRect(-DICE_SIZE / 2, -DICE_SIZE / 2, DICE_SIZE, DICE_SIZE);
-        graphics.strokeRect(-DICE_SIZE / 2, -DICE_SIZE / 2, DICE_SIZE, DICE_SIZE);
-
-        graphics.fillStyle(0x000000, 1);
-
-        const pipPositions = {
-            center: { x: 0, y: 0 },
-            topLeft: { x: -DICE_SIZE / 4, y: -DICE_SIZE / 4 },
-            topRight: { x: DICE_SIZE / 4, y: -DICE_SIZE / 4 },
-            bottomLeft: { x: -DICE_SIZE / 4, y: DICE_SIZE / 4 },
-            bottomRight: { x: DICE_SIZE / 4, y: DICE_SIZE / 4 },
-            middleLeft: { x: -DICE_SIZE / 4, y: 0 },
-            middleRight: { x: DICE_SIZE / 4, y: 0 },
-        };
-
-        const drawPip = (pos: { x: number; y: number }) => {
-            graphics.beginPath();
-            graphics.arc(pos.x, pos.y, PIP_RADIUS, 0, Math.PI * 2);
-            graphics.fillPath();
-        };
-
-        switch (face) {
-            case 1:
-                drawPip(pipPositions.center);
-                break;
-            case 2:
-                drawPip(pipPositions.topLeft);
-                drawPip(pipPositions.bottomRight);
-                break;
-            case 3:
-                drawPip(pipPositions.topLeft);
-                drawPip(pipPositions.center);
-                drawPip(pipPositions.bottomRight);
-                break;
-            case 4:
-                drawPip(pipPositions.topLeft);
-                drawPip(pipPositions.topRight);
-                drawPip(pipPositions.bottomLeft);
-                drawPip(pipPositions.bottomRight);
-                break;
-            case 5:
-                drawPip(pipPositions.topLeft);
-                drawPip(pipPositions.topRight);
-                drawPip(pipPositions.center);
-                drawPip(pipPositions.bottomLeft);
-                drawPip(pipPositions.bottomRight);
-                break;
-            case 6:
-                drawPip(pipPositions.topLeft);
-                drawPip(pipPositions.topRight);
-                drawPip(pipPositions.middleLeft);
-                drawPip(pipPositions.middleRight);
-                drawPip(pipPositions.bottomLeft);
-                drawPip(pipPositions.bottomRight);
-                break;
-        }
+        const pos = this.getLayoutPosition(index, totalDice);
+        return new Dice3D(this, pos.x, pos.y, DICE_SIZE);
     }
 }
 
