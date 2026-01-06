@@ -3,9 +3,127 @@ import { Dice3D } from './dice-3d';
 
 let game: Phaser.Game | null = null;
 
+interface IDice {
+    destroy: () => void;
+    draw: (face: number) => void;
+    setPosition: (x: number, y: number) => void;
+    roll: (face: number) => void;
+}
+
+class Dice2D implements IDice {
+    private container: Phaser.GameObjects.Container;
+    private graphics: Phaser.GameObjects.Graphics;
+    private scene: Phaser.Scene;
+    private size: number;
+
+    constructor(scene: Phaser.Scene, x: number, y: number, size: number) {
+        this.scene = scene;
+        this.size = size;
+        this.container = scene.add.container(x, y);
+        this.graphics = scene.add.graphics();
+        this.container.add(this.graphics);
+        this.draw(1);
+    }
+
+    draw(face: number) {
+        const DICE_SIZE = this.size;
+        const PIP_RADIUS = DICE_SIZE / 12;
+
+        this.graphics.clear();
+        this.container.setData('face', face);
+
+        // Draw dice body
+        this.graphics.fillStyle(0xffffff, 1);
+        this.graphics.lineStyle(2, 0x000000, 1);
+        this.graphics.fillRect(-DICE_SIZE / 2, -DICE_SIZE / 2, DICE_SIZE, DICE_SIZE);
+        this.graphics.strokeRect(-DICE_SIZE / 2, -DICE_SIZE / 2, DICE_SIZE, DICE_SIZE);
+
+        this.graphics.fillStyle(0x000000, 1);
+
+        const pipPositions = {
+            center: { x: 0, y: 0 },
+            topLeft: { x: -DICE_SIZE / 4, y: -DICE_SIZE / 4 },
+            topRight: { x: DICE_SIZE / 4, y: -DICE_SIZE / 4 },
+            bottomLeft: { x: -DICE_SIZE / 4, y: DICE_SIZE / 4 },
+            bottomRight: { x: DICE_SIZE / 4, y: DICE_SIZE / 4 },
+            middleLeft: { x: -DICE_SIZE / 4, y: 0 },
+            middleRight: { x: DICE_SIZE / 4, y: 0 },
+        };
+
+        const drawPip = (pos: { x: number; y: number }) => {
+            this.graphics.beginPath();
+            this.graphics.arc(pos.x, pos.y, PIP_RADIUS, 0, Math.PI * 2);
+            this.graphics.fillPath();
+        };
+
+        switch (face) {
+            case 1:
+                drawPip(pipPositions.center);
+                break;
+            case 2:
+                drawPip(pipPositions.topLeft);
+                drawPip(pipPositions.bottomRight);
+                break;
+            case 3:
+                drawPip(pipPositions.topLeft);
+                drawPip(pipPositions.center);
+                drawPip(pipPositions.bottomRight);
+                break;
+            case 4:
+                drawPip(pipPositions.topLeft);
+                drawPip(pipPositions.topRight);
+                drawPip(pipPositions.bottomLeft);
+                drawPip(pipPositions.bottomRight);
+                break;
+            case 5:
+                drawPip(pipPositions.topLeft);
+                drawPip(pipPositions.topRight);
+                drawPip(pipPositions.center);
+                drawPip(pipPositions.bottomLeft);
+                drawPip(pipPositions.bottomRight);
+                break;
+            case 6:
+                drawPip(pipPositions.topLeft);
+                drawPip(pipPositions.topRight);
+                drawPip(pipPositions.middleLeft);
+                drawPip(pipPositions.middleRight);
+                drawPip(pipPositions.bottomLeft);
+                drawPip(pipPositions.bottomRight);
+                break;
+        }
+    }
+
+    roll(finalFace: number) {
+        // Force a redraw of the old face before animation
+        const oldFace = this.container.getData('face') || 1;
+        this.draw(oldFace);
+
+        this.scene.tweens.add({
+            targets: this.container,
+            angle: 1080 + Phaser.Math.Between(-180, 180), // Spin multiple times
+            duration: 1000,
+            ease: 'Cubic.easeOut',
+            onComplete: () => {
+                this.container.setAngle(0); // Reset angle
+                this.draw(finalFace);
+            }
+        });
+    }
+
+    setPosition(x: number, y: number) {
+        this.container.setPosition(x, y);
+    }
+
+    destroy() {
+        this.container.destroy();
+    }
+}
+
+
 class DiceScene extends Phaser.Scene {
-    dice: Dice3D[] = [];
+    dice: IDice[] = [];
     currentFaces: number[] = [1]; // Start with one die showing 1
+    is3D: boolean = true;
 
     constructor() {
         super({ key: 'DiceScene' });
@@ -14,7 +132,13 @@ class DiceScene extends Phaser.Scene {
     create() {
         this.scale.on('resize', () => this.redraw(true), this);
         this.registry.set('rollDice', (numDice: number) => this.roll(numDice));
+        this.registry.set('toggle3D', (is3D: boolean) => this.toggle3D(is3D));
         this.redraw(false); // Initial draw
+    }
+
+    toggle3D(is3D: boolean) {
+        this.is3D = is3D;
+        this.redraw(false);
     }
 
     roll(numDice: number) {
@@ -91,12 +215,12 @@ class DiceScene extends Phaser.Scene {
     }
 
 
-    layoutDice(die: Dice3D, index: number, totalDice: number) {
+    layoutDice(die: IDice, index: number, totalDice: number) {
         const pos = this.getLayoutPosition(index, totalDice);
         die.setPosition(pos.x, pos.y);
     }
 
-    createDice(index: number): Dice3D {
+    createDice(index: number): IDice {
         const { width, height } = this.sys.canvas;
         const totalDice = this.currentFaces.length > 0 ? this.currentFaces.length : 1;
         const cols = Math.ceil(Math.sqrt(totalDice));
@@ -105,10 +229,16 @@ class DiceScene extends Phaser.Scene {
         const availableHeight = height * 0.8;
         const cellWidth = availableWidth / cols;
         const cellHeight = availableHeight / rows;
-        const DICE_SIZE = Math.min(cellWidth, cellHeight) * 0.5;
+        const DICE_SIZE_3D = Math.min(cellWidth, cellHeight) * 0.5;
+        const DICE_SIZE_2D = Math.min(cellWidth, cellHeight) * 0.8;
 
         const pos = this.getLayoutPosition(index, totalDice);
-        return new Dice3D(this, pos.x, pos.y, DICE_SIZE);
+
+        if (this.is3D) {
+            return new Dice3D(this, pos.x, pos.y, DICE_SIZE_3D);
+        } else {
+            return new Dice2D(this, pos.x, pos.y, DICE_SIZE_2D);
+        }
     }
 }
 
@@ -137,6 +267,15 @@ export function rollDice(numDice: number) {
         const scene = game.scene.getScene('DiceScene');
         if (scene && scene.registry.has('rollDice')) {
             scene.registry.get('rollDice')(numDice);
+        }
+    }
+}
+
+export function toggle3D(is3D: boolean) {
+    if (game) {
+        const scene = game.scene.getScene('DiceScene');
+        if (scene && scene.registry.has('toggle3D')) {
+            scene.registry.get('toggle3D')(is3D);
         }
     }
 }

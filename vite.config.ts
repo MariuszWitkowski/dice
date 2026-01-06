@@ -11,5 +11,8 @@ export default defineConfig({
       },
     },
     threads: false,
+    deps: {
+        inline: ['canvas'],
+    }
   },
 })

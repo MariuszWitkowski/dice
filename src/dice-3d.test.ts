@@ -1,7 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Dice3D } from './dice-3d';
 
-// Manually mock Phaser directly in the test file
 const mockGraphics = {
     clear: vi.fn().mockReturnThis(),
     fillStyle: vi.fn().mockReturnThis(),
@@ -13,13 +11,10 @@ const mockGraphics = {
     fillPath: vi.fn().mockReturnThis(),
     strokePath: vi.fn().mockReturnThis(),
     fillCircle: vi.fn().mockReturnThis(),
-    fillRect: vi.fn().mockReturnThis(),
-    strokeRect: vi.fn().mockReturnThis(),
 };
 
 const mockContainer = {
     add: vi.fn(),
-    removeAll: vi.fn(),
     destroy: vi.fn(),
     setPosition: vi.fn(),
     y: 0,
@@ -56,12 +51,17 @@ vi.mock('phaser', () => ({
     },
 }));
 
-
 describe('Dice3D', () => {
-    let sceneMock: any;
+    let Dice3D;
+    let sceneMock;
+    let Phaser;
 
-    beforeEach(() => {
-        const Phaser = require('phaser');
+    beforeEach(async () => {
+        vi.clearAllMocks();
+        vi.resetModules();
+
+        Dice3D = (await import('./dice-3d')).Dice3D;
+        Phaser = (await import('phaser')).default;
         sceneMock = new Phaser.Scene();
     });
 
@@ -85,7 +85,7 @@ describe('Dice3D', () => {
 
     it('should destroy the container', () => {
         const dice = new Dice3D(sceneMock, 0, 0, 50);
-        const destroySpy = vi.spyOn((dice as any).container, 'destroy');
+        const destroySpy = vi.spyOn(dice.container, 'destroy');
         dice.destroy();
         expect(destroySpy).toHaveBeenCalled();
     });
