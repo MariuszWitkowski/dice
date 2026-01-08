@@ -91,12 +91,14 @@ describe('Dice Roller', () => {
     });
 
     it('should initialize the game', () => {
-        init();
+        const mockContainer = document.createElement('div');
+        init(mockContainer);
         expect(Phaser.Game).toHaveBeenCalled();
     });
 
     it('should call rollDice on the scene', () => {
-        init();
+        const mockContainer = document.createElement('div');
+        init(mockContainer);
         const gameInstance = Phaser.Game.mock.results[0].value;
         const sceneInstance = gameInstance.scene.getScene();
         const rollDiceFn = vi.fn();
@@ -109,7 +111,8 @@ describe('Dice Roller', () => {
     });
 
     it('should call toggle3D on the scene', () => {
-        init();
+        const mockContainer = document.createElement('div');
+        init(mockContainer);
         const gameInstance = Phaser.Game.mock.results[0].value;
         const sceneInstance = gameInstance.scene.getScene();
         const toggle3DFn = vi.fn();
