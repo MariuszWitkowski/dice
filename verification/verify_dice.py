@@ -7,7 +7,7 @@ def verify_dice_rolling(page: Page):
     and that the correct number of dice are displayed after clicking the 'Roll' button.
     """
     # 1. Arrange: Go to the application's homepage.
-    page.goto("http://localhost:5173")
+    page.goto("http://localhost:5173/dice/")
 
     # 2. Act: Select 4 dice from the dropdown.
     dice_selector = page.locator("#dice-selector")
