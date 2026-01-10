@@ -242,23 +242,22 @@ class DiceScene extends Phaser.Scene {
     }
 }
 
-const config: Phaser.Types.Core.GameConfig = {
-    type: Phaser.AUTO,
-    scale: {
-        mode: Phaser.Scale.FIT,
-        parent: 'game-container',
-        autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: '100%',
-        height: '100%',
-    },
-    scene: [DiceScene],
-    backgroundColor: '#ffffff',
-};
-
-export function init() {
+export function init(container: HTMLDivElement) {
     if (game) {
         game.destroy(true);
     }
+    const config: Phaser.Types.Core.GameConfig = {
+        type: Phaser.AUTO,
+        scale: {
+            mode: Phaser.Scale.FIT,
+            parent: container,
+            autoCenter: Phaser.Scale.CENTER_BOTH,
+            width: '100%',
+            height: '100%',
+        },
+        scene: [DiceScene],
+        backgroundColor: '#ffffff',
+    };
     game = new Phaser.Game(config);
 }
 

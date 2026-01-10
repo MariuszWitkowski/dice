@@ -5,6 +5,7 @@
   "private": true,
   "devDependencies": {
     "@types/bun": "latest",
+    "@vitejs/plugin-vue": "^6.0.3",
     "canvas": "^2.11.2",
     "oxc": "^1.0.1",
     "phaser3spectorjs": "^0.0.8",
@@ -21,6 +22,7 @@
   },
   "dependencies": {
     "jsdom": "^27.4.0",
-    "phaser": "^3.80.1"
+    "phaser": "^3.80.1",
+    "vue": "^3.5.26"
   }
 }
