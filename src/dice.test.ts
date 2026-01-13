@@ -39,6 +39,9 @@ vi.mock('phaser', () => {
         add: {
             graphics: vi.fn(() => mockGraphics),
             container: vi.fn(() => mockContainer),
+            text: vi.fn(() => ({
+                setOrigin: vi.fn().mockReturnThis(),
+            })),
         },
         tweens: { add: vi.fn() },
     };
@@ -75,7 +78,7 @@ vi.mock('phaser', () => {
 });
 
 describe('Dice Roller', () => {
-    let init, rollDice, toggle3D;
+    let init, rollDice, toggle3D, setNumEdges;
     let Phaser;
 
     beforeEach(async () => {
@@ -86,6 +89,7 @@ describe('Dice Roller', () => {
         init = diceModule.init;
         rollDice = diceModule.rollDice;
         toggle3D = diceModule.toggle3D;
+        setNumEdges = diceModule.setNumEdges;
 
         Phaser = (await import('phaser')).default;
     });
@@ -104,10 +108,10 @@ describe('Dice Roller', () => {
         const rollDiceFn = vi.fn();
         sceneInstance.registry.get.mockReturnValue(rollDiceFn);
 
-        rollDice(3);
+        rollDice(3, 6);
 
         expect(sceneInstance.registry.get).toHaveBeenCalledWith('rollDice');
-        expect(rollDiceFn).toHaveBeenCalledWith(3);
+        expect(rollDiceFn).toHaveBeenCalledWith(3, 6);
     });
 
     it('should call toggle3D on the scene', () => {
@@ -122,5 +126,57 @@ describe('Dice Roller', () => {
 
         expect(sceneInstance.registry.get).toHaveBeenCalledWith('toggle3D');
         expect(toggle3DFn).toHaveBeenCalledWith(false);
+    });
+
+    it('should call setNumEdges on the scene', () => {
+        const mockContainer = document.createElement('div');
+        init(mockContainer);
+        const gameInstance = Phaser.Game.mock.results[0].value;
+        const sceneInstance = gameInstance.scene.getScene();
+        const setNumEdgesFn = vi.fn();
+        sceneInstance.registry.get.mockImplementation((key) => {
+            if (key === 'setNumEdges') return setNumEdgesFn;
+            return null;
+        });
+
+        setNumEdges(10);
+
+        expect(sceneInstance.registry.get).toHaveBeenCalledWith('setNumEdges');
+        expect(setNumEdgesFn).toHaveBeenCalledWith(10);
+    });
+
+    it('should update numEdges and redraw when setNumEdges is called', () => {
+        const mockContainer = document.createElement('div');
+        init(mockContainer);
+        const gameInstance = Phaser.Game.mock.results[0].value;
+        const sceneInstance = gameInstance.scene.getScene();
+
+        const redrawSpy = vi.spyOn(sceneInstance, 'redraw');
+
+        sceneInstance.setNumEdges(12);
+
+        expect(redrawSpy).toHaveBeenCalledWith(false);
+
+        redrawSpy.mockRestore();
+    });
+
+    it('should generate a roll within the correct range', () => {
+        const mockContainer = document.createElement('div');
+        init(mockContainer);
+        const gameInstance = Phaser.Game.mock.results[0].value;
+        const sceneInstance = gameInstance.scene.getScene();
+
+        sceneInstance.roll(1, 20);
+
+        expect(sceneInstance.currentFaces).toHaveLength(1);
+        const faceValue = sceneInstance.currentFaces[0];
+        expect(faceValue).toBeGreaterThanOrEqual(1);
+        expect(faceValue).toBeLessThanOrEqual(20);
+
+        sceneInstance.roll(1, 3);
+        expect(sceneInstance.currentFaces).toHaveLength(1);
+        const faceValueD3 = sceneInstance.currentFaces[0];
+        expect(faceValueD3).toBeGreaterThanOrEqual(1);
+        expect(faceValueD3).toBeLessThanOrEqual(3);
     });
 });
