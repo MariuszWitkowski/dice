@@ -12,17 +12,28 @@
       <option value="5">5</option>
       <option value="6">6</option>
     </select>
-    <input type="checkbox" id="3d-checkbox" style="margin: 0 10px;" v-model="is3D" @change="onToggle3D">
+    <label for="dice-edges-selector">Edges:</label>
+    <select id="dice-edges-selector" v-model="numEdges">
+      <option value="3">d3</option>
+      <option value="4">d4</option>
+      <option value="6">d6</option>
+      <option value="8">d8</option>
+      <option value="10">d10</option>
+      <option value="12">d12</option>
+      <option value="20">d20</option>
+    </select>
+    <input type="checkbox" id="3d-checkbox" style="margin: 0 10px;" v-model="is3D" @change="onToggle3D" :disabled="numEdges !== '6'">
     <label for="3d-checkbox">3D</label>
     <button id="roll-button" @click="onRollDice">Roll</button>
   </div>
 </template>
 
 <script setup>
-import { onMounted, ref } from 'vue';
-import { init, rollDice, toggle3D } from '../dice';
+import { onMounted, ref, watch } from 'vue';
+import { init, rollDice, toggle3D, setNumEdges } from '../dice';
 
 const numDice = ref(1);
+const numEdges = ref('6');
 const is3D = ref(true);
 const gameContainer = ref(null);
 
@@ -32,8 +43,16 @@ onMounted(() => {
   }
 });
 
+watch(numEdges, (newEdges) => {
+  setNumEdges(parseInt(newEdges, 10));
+  if (newEdges !== '6') {
+    is3D.value = false;
+    onToggle3D();
+  }
+});
+
 const onRollDice = () => {
-  rollDice(numDice.value);
+  rollDice(parseInt(numDice.value, 10), parseInt(numEdges.value, 10));
 };
 
 const onToggle3D = () => {

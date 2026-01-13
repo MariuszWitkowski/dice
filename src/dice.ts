@@ -13,21 +13,28 @@ interface IDice {
 class Dice2D implements IDice {
     private container: Phaser.GameObjects.Container;
     private graphics: Phaser.GameObjects.Graphics;
+    private text: Phaser.GameObjects.Text;
     private scene: Phaser.Scene;
     private size: number;
+    private numEdges: number;
 
-    constructor(scene: Phaser.Scene, x: number, y: number, size: number) {
+    constructor(scene: Phaser.Scene, x: number, y: number, size: number, numEdges: number) {
         this.scene = scene;
         this.size = size;
+        this.numEdges = numEdges;
         this.container = scene.add.container(x, y);
         this.graphics = scene.add.graphics();
-        this.container.add(this.graphics);
+        this.text = scene.add.text(0, 0, '', {
+            fontSize: `${size / 2}px`,
+            color: '#000000',
+            fontStyle: 'bold',
+        }).setOrigin(0.5);
+        this.container.add([this.graphics, this.text]);
         this.draw(1);
     }
 
     draw(face: number) {
         const DICE_SIZE = this.size;
-        const PIP_RADIUS = DICE_SIZE / 12;
 
         this.graphics.clear();
         this.container.setData('face', face);
@@ -38,58 +45,66 @@ class Dice2D implements IDice {
         this.graphics.fillRect(-DICE_SIZE / 2, -DICE_SIZE / 2, DICE_SIZE, DICE_SIZE);
         this.graphics.strokeRect(-DICE_SIZE / 2, -DICE_SIZE / 2, DICE_SIZE, DICE_SIZE);
 
-        this.graphics.fillStyle(0x000000, 1);
+        if (this.numEdges > 6) {
+            this.text.setText(face.toString());
+            this.text.setVisible(true);
+        } else {
+            this.text.setVisible(false);
 
-        const pipPositions = {
-            center: { x: 0, y: 0 },
-            topLeft: { x: -DICE_SIZE / 4, y: -DICE_SIZE / 4 },
-            topRight: { x: DICE_SIZE / 4, y: -DICE_SIZE / 4 },
-            bottomLeft: { x: -DICE_SIZE / 4, y: DICE_SIZE / 4 },
-            bottomRight: { x: DICE_SIZE / 4, y: DICE_SIZE / 4 },
-            middleLeft: { x: -DICE_SIZE / 4, y: 0 },
-            middleRight: { x: DICE_SIZE / 4, y: 0 },
-        };
+            const PIP_RADIUS = DICE_SIZE / 12;
+            this.graphics.fillStyle(0x000000, 1);
 
-        const drawPip = (pos: { x: number; y: number }) => {
-            this.graphics.beginPath();
-            this.graphics.arc(pos.x, pos.y, PIP_RADIUS, 0, Math.PI * 2);
-            this.graphics.fillPath();
-        };
+            const pipPositions = {
+                center: { x: 0, y: 0 },
+                topLeft: { x: -DICE_SIZE / 4, y: -DICE_SIZE / 4 },
+                topRight: { x: DICE_SIZE / 4, y: -DICE_SIZE / 4 },
+                bottomLeft: { x: -DICE_SIZE / 4, y: DICE_SIZE / 4 },
+                bottomRight: { x: DICE_SIZE / 4, y: DICE_SIZE / 4 },
+                middleLeft: { x: -DICE_SIZE / 4, y: 0 },
+                middleRight: { x: DICE_SIZE / 4, y: 0 },
+            };
 
-        switch (face) {
-            case 1:
-                drawPip(pipPositions.center);
-                break;
-            case 2:
-                drawPip(pipPositions.topLeft);
-                drawPip(pipPositions.bottomRight);
-                break;
-            case 3:
-                drawPip(pipPositions.topLeft);
-                drawPip(pipPositions.center);
-                drawPip(pipPositions.bottomRight);
-                break;
-            case 4:
-                drawPip(pipPositions.topLeft);
-                drawPip(pipPositions.topRight);
-                drawPip(pipPositions.bottomLeft);
-                drawPip(pipPositions.bottomRight);
-                break;
-            case 5:
-                drawPip(pipPositions.topLeft);
-                drawPip(pipPositions.topRight);
-                drawPip(pipPositions.center);
-                drawPip(pipPositions.bottomLeft);
-                drawPip(pipPositions.bottomRight);
-                break;
-            case 6:
-                drawPip(pipPositions.topLeft);
-                drawPip(pipPositions.topRight);
-                drawPip(pipPositions.middleLeft);
-                drawPip(pipPositions.middleRight);
-                drawPip(pipPositions.bottomLeft);
-                drawPip(pipPositions.bottomRight);
-                break;
+            const drawPip = (pos: { x: number; y: number }) => {
+                this.graphics.beginPath();
+                this.graphics.arc(pos.x, pos.y, PIP_RADIUS, 0, Math.PI * 2);
+                this.graphics.fillPath();
+            };
+
+            switch (face) {
+                case 1:
+                    drawPip(pipPositions.center);
+                    break;
+                case 2:
+                    drawPip(pipPositions.topLeft);
+                    drawPip(pipPositions.bottomRight);
+                    break;
+                case 3:
+                    drawPip(pipPositions.topLeft);
+                    drawPip(pipPositions.center);
+                    drawPip(pipPositions.bottomRight);
+                    break;
+                case 4:
+                    drawPip(pipPositions.topLeft);
+                    drawPip(pipPositions.topRight);
+                    drawPip(pipPositions.bottomLeft);
+                    drawPip(pipPositions.bottomRight);
+                    break;
+                case 5:
+                    drawPip(pipPositions.topLeft);
+                    drawPip(pipPositions.topRight);
+                    drawPip(pipPositions.center);
+                    drawPip(pipPositions.bottomLeft);
+                    drawPip(pipPositions.bottomRight);
+                    break;
+                case 6:
+                    drawPip(pipPositions.topLeft);
+                    drawPip(pipPositions.topRight);
+                    drawPip(pipPositions.middleLeft);
+                    drawPip(pipPositions.middleRight);
+                    drawPip(pipPositions.bottomLeft);
+                    drawPip(pipPositions.bottomRight);
+                    break;
+            }
         }
     }
 
@@ -124,6 +139,7 @@ class DiceScene extends Phaser.Scene {
     dice: IDice[] = [];
     currentFaces: number[] = [1]; // Start with one die showing 1
     is3D: boolean = true;
+    private numEdges = 6;
 
     constructor() {
         super({ key: 'DiceScene' });
@@ -131,9 +147,15 @@ class DiceScene extends Phaser.Scene {
 
     create() {
         this.scale.on('resize', () => this.redraw(true), this);
-        this.registry.set('rollDice', (numDice: number) => this.roll(numDice));
+        this.registry.set('rollDice', (numDice: number, numEdges: number) => this.roll(numDice, numEdges));
         this.registry.set('toggle3D', (is3D: boolean) => this.toggle3D(is3D));
+        this.registry.set('setNumEdges', (numEdges: number) => this.setNumEdges(numEdges));
         this.redraw(false); // Initial draw
+    }
+
+    setNumEdges(numEdges: number) {
+        this.numEdges = numEdges;
+        this.redraw(false);
     }
 
     toggle3D(is3D: boolean) {
@@ -141,10 +163,11 @@ class DiceScene extends Phaser.Scene {
         this.redraw(false);
     }
 
-    roll(numDice: number) {
+    roll(numDice: number, numEdges: number) {
+        this.numEdges = numEdges;
         this.currentFaces = [];
         for (let i = 0; i < numDice; i++) {
-            this.currentFaces.push(Math.floor(Math.random() * 6) + 1);
+            this.currentFaces.push(Math.floor(Math.random() * numEdges) + 1);
         }
 
         // Ensure we have the correct number of dice objects
@@ -237,7 +260,16 @@ class DiceScene extends Phaser.Scene {
         if (this.is3D) {
             return new Dice3D(this, pos.x, pos.y, DICE_SIZE_3D);
         } else {
-            return new Dice2D(this, pos.x, pos.y, DICE_SIZE_2D);
+            return new Dice2D(this, pos.x, pos.y, DICE_SIZE_2D, this.numEdges);
+        }
+    }
+}
+
+export function setNumEdges(numEdges: number) {
+    if (game) {
+        const scene = game.scene.getScene('DiceScene');
+        if (scene && scene.registry.has('setNumEdges')) {
+            scene.registry.get('setNumEdges')(numEdges);
         }
     }
 }
@@ -261,11 +293,11 @@ export function init(container: HTMLDivElement) {
     game = new Phaser.Game(config);
 }
 
-export function rollDice(numDice: number) {
+export function rollDice(numDice: number, numEdges: number) {
     if (game) {
         const scene = game.scene.getScene('DiceScene');
         if (scene && scene.registry.has('rollDice')) {
-            scene.registry.get('rollDice')(numDice);
+            scene.registry.get('rollDice')(numDice, numEdges);
         }
     }
 }
