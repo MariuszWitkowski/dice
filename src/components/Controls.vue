@@ -1,54 +1,40 @@
 <template>
   <div id="controls-container">
-    <label for="dice-selector">Number of dice:</label>
-    <select id="dice-selector" v-model="numDice">
-      <option value="1">1</option>
-      <option value="2">2</option>
-      <option value="3">3</option>
-      <option value="4">4</option>
-      <option value="5">5</option>
-      <option value="6">6</option>
-    </select>
-    <label for="dice-edges-selector">Edges:</label>
-    <select id="dice-edges-selector" v-model="numEdges">
-      <option value="3">d3</option>
-      <option value="4">d4</option>
-      <option value="6">d6</option>
-      <option value="8">d8</option>
-      <option value="10">d10</option>
-      <option value="12">d12</option>
-      <option value="20">d20</option>
-    </select>
-    <input type="checkbox" id="3d-checkbox" style="margin: 0 10px;" v-model="is3D" @change="onToggle3D" :disabled="numEdges !== '6'">
-    <label for="3d-checkbox">3D</label>
-    <button id="roll-button" @click="onRollDice">Roll</button>
+    <button id="roll-button" @click="$emit('roll-dice')">Roll</button>
+    <button id="options-button" @click="$emit('toggle-options')">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-settings"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    </button>
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
-import { rollDice, toggle3D, setNumEdges } from '../dice';
-
-const numDice = ref(1);
-const numEdges = ref('6');
-const is3D = ref(true);
-
-watch(numEdges, (newEdges) => {
-  setNumEdges(parseInt(newEdges, 10));
-  if (newEdges !== '6') {
-    is3D.value = false;
-    onToggle3D();
-  }
-});
-
-const onRollDice = () => {
-  rollDice(parseInt(numDice.value, 10), parseInt(numEdges.value, 10));
-};
-
-const onToggle3D = () => {
-  toggle3D(is3D.value);
-};
+defineEmits(['roll-dice', 'toggle-options']);
 </script>
 
 <style scoped>
+#controls-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  background-color: #f0f0f0;
+  position: relative;
+}
+
+#roll-button {
+  padding: 15px 30px;
+  font-size: 1.5em;
+  cursor: pointer;
+  z-index: 10;
+  border: none;
+  background-color: #e0e0e0;
+}
+
+#options-button {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  cursor: pointer;
+}
 </style>
