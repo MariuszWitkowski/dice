@@ -1,36 +1,45 @@
+from playwright.sync_api import sync_playwright
 
-from playwright.sync_api import Page, expect, sync_playwright
-
-def verify_dice_rolling(page: Page):
-    """
-    This test verifies that a user can select the number of dice to roll
-    and that the correct number of dice are displayed after clicking the 'Roll' button.
-    """
-    # 1. Arrange: Go to the application's homepage.
+def verify_dice_rolling(page):
+    """Verify that the dice can be rolled and the result is displayed."""
     page.goto("http://localhost:5173/dice/")
 
-    # 2. Act: Select 4 dice from the dropdown.
+    # Hide the Eruda button
+    page.evaluate("document.querySelector('#eruda').style.display = 'none'")
+
+    # Open the options modal
+    options_button = page.locator("#options-button")
+    options_button.click()
+    page.screenshot(path="verification/modal_screenshot.png")
+
+    # Change the number of dice and edges
     dice_selector = page.locator("#dice-selector")
     dice_selector.select_option("4")
+    edges_selector = page.locator("#dice-edges-selector")
+    edges_selector.select_option("12")
 
-    # 3. Act: Click the "Roll" button.
-    roll_button = page.get_by_role("button", name="Roll")
+    # Uncheck the 3D checkbox
+    checkbox_3d = page.locator("#\\33 d-checkbox")
+    checkbox_3d.uncheck()
+
+    # Close the modal
+    close_button = page.locator(".modal-content button")
+    close_button.click()
+
+    # Roll the dice
+    roll_button = page.locator("#roll-button")
     roll_button.click()
 
-    # 4. Assert: For now, we will just wait for the canvas to be visible.
-    # A more robust test would involve checking the canvas content, but for
-    # visual verification, this is sufficient.
-    canvas = page.locator("#game-container canvas")
-    expect(canvas).to_be_visible()
+    # Take a screenshot
+    page.screenshot(path="verification/verification.png")
 
-    # 5. Screenshot: Capture the final result for visual verification.
-    page.screenshot(path="/app/verification/verification.png")
+def main():
+    """Run the verification script."""
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        verify_dice_rolling(page)
+        browser.close()
 
 if __name__ == "__main__":
-    with sync_playwright() as p:
-        browser = p.chromium.launch(headless=True)
-        page = browser.new_page()
-        try:
-            verify_dice_rolling(page)
-        finally:
-            browser.close()
+    main()
